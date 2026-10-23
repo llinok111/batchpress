@@ -108,6 +108,18 @@ test('fold: last write wins for a task that failed then succeeded', () => {
   assert.equal(counts.failed, 0);
 });
 
+test('classifyError: libvips bare "Unknown error" on a truncated JPEG is ECORRUPT', () => {
+  // Regression: libvips reports the same truncated input as either
+  // "VipsJpeg: premature end of JPEG image" or a bare "Unknown error"
+  // (~3 of 200 runs measured). Classifying the second as EUNKNOWN made the
+  // reported code for a byte-identical file non-deterministic.
+  for (const message of ['Unknown error', 'unknown error', 'Unknown error ']) {
+    const r = classifyError({ message });
+    assert.equal(r.code, 'ECORRUPT', message);
+    assert.equal(r.retryable, false, message);
+  }
+});
+
 test('classifyError: input defects are never retryable', () => {
   const cases = [
     ['Input Buffer is empty', 'EEMPTY', false],

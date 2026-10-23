@@ -94,6 +94,8 @@ Errors are sorted into two classes, because the distinction is the whole point o
 
 Rationale: retrying a truncated JPEG five times produces five identical failures, five journal entries and five times the wall clock. Conversely, a disk that is momentarily locked or a worker that died is exactly the case where a retry is correct. Unknown error classes are **not** retried unless `--retry-unknown` is passed — a deliberate fail-fast default.
 
+One classification is non-obvious: libvips reports a truncated JPEG as either `VipsJpeg: premature end of JPEG image` or a bare `Unknown error`, varying between runs on byte-identical input (~3 of 200 measured). Both map to `ECORRUPT`. Letting the second fall through to `EUNKNOWN` would make the code reported for the same file non-deterministic, which is harder to diagnose than a slightly coarser class.
+
 Each failure is recorded with a code, the attempt number, and whether it was final:
 
 ```json
@@ -150,7 +152,7 @@ column -s, -t < D:/photos-webp/.batchpress/runs/<id>/failures.csv
 ## 7. Tests and measurements
 
 ```bash
-npm test                       # 53 tests: 30 unit + 23 integration (real images, real kills)
+npm test                       # 54 tests: 31 unit + 23 integration (real images, real kills)
 node test/scaling.mjs 3        # concurrency curve, median of 3 per slot count
 node test/bench.mjs            # throughput / memory across 10 configurations
 node test/drills.mjs           # kill -9, cancel, disk guard, retry accounting

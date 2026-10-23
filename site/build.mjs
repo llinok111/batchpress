@@ -205,7 +205,7 @@ const html = `<!doctype html>
       <span class="tag">idempotent retry</span>
       <span class="tag">resume</span>
       <span class="tag">disk guard</span>
-      <span class="tag">53 tests</span>
+      <span class="tag">54 tests</span>
     </div>
   </div>
 </header>
