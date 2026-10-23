@@ -1,0 +1,43 @@
+batchpress
+Copyright (c) 2026 batchpress contributors
+Licensed under the MIT License (see LICENSE).
+
+--------------------------------------------------------------------------------
+THIRD-PARTY COMPONENTS
+
+1. sharp  —  https://github.com/lovell/sharp
+   Version at time of writing: 0.35.5
+   License: Apache License 2.0 (full text: docs/third-party/sharp-LICENSE.txt)
+   Copyright: Lovell Fuller and contributors.
+
+   batchpress does not modify, vendor, or redistribute sharp source code. It
+   declares sharp as a runtime dependency and drives it through its public API
+   (`sharp()`, `.resize()`, `.rotate()`, `.toFormat()`, `.toBuffer()`,
+   `sharp.concurrency()`, `sharp.cache()`). The Apache-2.0 licence text is
+   reproduced in this package for convenience and to satisfy section 4(d) in
+   case a future distribution bundles node_modules.
+
+2. libvips  —  https://github.com/libvips/libvips
+   License: LGPL-2.1-or-later
+   libvips is shipped inside the prebuilt sharp binary as a dynamically linked
+   library; it is not statically linked into batchpress code and its source is
+   not modified. Version observed in this environment: 8.18.7.
+
+--------------------------------------------------------------------------------
+SCOPE OF ORIGINAL WORK
+
+Original to batchpress (MIT):
+
+  - the append-only NDJSON journal and its fold/state machine
+  - the crash-consistent publish protocol (staging file + rename)
+  - the worker-thread slot pool, per-task timeout and hard-cancel handling
+  - error classification and the retry policy
+  - the disk-reserve guard and the output-size estimator
+  - the resume path, including adoption of files published before a crash
+  - aggregation into summary.json / summary.md / failures.csv
+  - the CLI, presets, fixtures, test suite and benchmark harness
+
+Supplied by sharp/libvips:
+
+  - image decoding, EXIF orientation handling, resizing, format encoding
+  - the pixel-level correctness of every produced image

@@ -1,0 +1,45 @@
+{
+  "name": "batchpress",
+  "version": "1.0.0",
+  "description": "Crash-safe batch task manager for sharp's single-image pipeline: queue, journal, retry, cancel, resume, disk guard.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "bin": {
+    "batchpress": "bin/batchpress.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/unit.test.mjs test/integration.test.mjs",
+    "test:unit": "node --test test/unit.test.mjs",
+    "test:integration": "node --test test/integration.test.mjs",
+    "bench": "node test/bench.mjs",
+    "scaling": "node test/scaling.mjs 3",
+    "drills": "node test/drills.mjs",
+    "verify:images": "node test/verify-images.mjs"
+  },
+  "keywords": [
+    "batch",
+    "image",
+    "sharp",
+    "queue",
+    "resume",
+    "idempotent",
+    "cli"
+  ],
+  "dependencies": {
+    "sharp": "^0.35.5"
+  }
+}

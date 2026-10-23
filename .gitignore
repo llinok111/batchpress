@@ -1,0 +1,9 @@
+node_modules/
+.bench/
+.drills/
+.scaling/
+.verify/
+.batchpress/
+*.log
+shots/
+.DS_Store
