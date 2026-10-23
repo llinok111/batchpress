@@ -22,20 +22,22 @@ All numbers below are copied from actual command output. Two kinds of measuremen
 
 ```
 node --test test/unit.test.mjs          31 tests, 31 pass, 0 fail
-node --test test/integration.test.mjs   23 tests, 23 pass, 0 fail
-npm test                                54 tests, 54 pass, 0 fail
+node --test test/integration.test.mjs   24 tests, 24 pass, 0 fail
+npm test                                55 tests, 55 pass, 0 fail
 ```
 
-Run five times consecutively with no flakes (`54/54` each time). The integration suite spawns real child processes, sends a real `SIGKILL`, cancels a running batch from a second process, and trips the disk guard through `BATCHPRESS_FAKE_FREE_BYTES`.
+Run three times consecutively with no flakes (`55/55` each time). The integration suite spawns real child processes, sends a real `SIGKILL`, cancels a running batch from a second process, and trips the disk guard through `BATCHPRESS_FAKE_FREE_BYTES`.
 
 An earlier version of this suite failed intermittently — 1 run in 4 — on the edge-case test. Root cause: libvips reports a truncated JPEG as either `VipsJpeg: premature end of JPEG image` or a bare `Unknown error`, varying between runs on byte-identical input (3 of 200 measured). The classifier mapped the second to `EUNKNOWN`, so the same file got two different codes. Fixed by mapping both to `ECORRUPT`; the flake is now a regression test.
+
+The first CI run on Linux also exposed a genuine CLI bug that local testing had hidden. `status --json` on a run with more than ~40 tasks emitted exactly 8192 bytes through a pipe and `JSON.parse` failed with "Unterminated string at position 8192" — `process.exit()` was discarding the unflushed tail. Redirecting to a file masked it because file writes are synchronous. Fixed by setting `process.exitCode` and letting Node flush; a test now asserts a pipe larger than the 8 KiB buffer arrives complete.
 
 ### Coverage by group
 
 | group | tests | covers |
 | --- | --- | --- |
 | unit | 31 | journal append/read/torn-tail/seq continuation, fold state machine, error classification, backoff, task-id stability and separator normalisation, canonical preset signature, disk estimate floor, percentile/byte formatting, atomic write, directory-walk exclusions, report derivation, CSV escaping |
-| integration | 23 | idempotent re-run, cross-run byte determinism, retry success/exhaustion/disable, no staging residue, concurrency ceiling, in-flight byte throttling, cancel (pre-existing, in-flight, from another process), resume after cancel, disk reserve pause + resume, `ENOSPC` pause, `kill -9` + resume with adoption, torn journal, `--retry-failed`, per-defect codes, EXIF orientation, nested output layout, report consistency, CLI exit-code contract, `status --json` |
+| integration | 24 | idempotent re-run, cross-run byte determinism, retry success/exhaustion/disable, no staging residue, concurrency ceiling, in-flight byte throttling, cancel (pre-existing, in-flight, from another process), resume after cancel, disk reserve pause + resume, `ENOSPC` pause, `kill -9` + resume with adoption, torn journal, `--retry-failed`, per-defect codes, EXIF orientation, nested output layout, report consistency, CLI exit-code contract, `status --json`, pipe larger than 8 KiB |
 
 ## Concurrency scaling (median of 3)
 

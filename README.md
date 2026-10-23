@@ -152,7 +152,7 @@ column -s, -t < D:/photos-webp/.batchpress/runs/<id>/failures.csv
 ## 7. Tests and measurements
 
 ```bash
-npm test                       # 54 tests: 31 unit + 23 integration (real images, real kills)
+npm test                       # 55 tests: 31 unit + 24 integration (real images, real kills)
 node test/scaling.mjs 3        # concurrency curve, median of 3 per slot count
 node test/bench.mjs            # throughput / memory across 10 configurations
 node test/drills.mjs           # kill -9, cancel, disk guard, retry accounting

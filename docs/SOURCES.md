@@ -40,7 +40,7 @@ No upstream source file is modified, vendored, copied or patched. No upstream te
 | Aggregation into summary.json / summary.md / failures.csv | `src/report.mjs` |
 | CLI, exit-code contract | `src/cli.mjs` |
 | Single-image execution inside a worker | `src/worker.mjs` |
-| Deterministic corpus generator, 54 tests, bench and drill harnesses | `test/` |
+| Deterministic corpus generator, 55 tests, bench and drill harnesses | `test/` |
 
 ## Why this is not a fork
 

@@ -303,9 +303,29 @@ async function main() {
   return EXIT.usage;
 }
 
+/**
+ * Exit only after stdout/stderr have actually drained.
+ *
+ * `process.exit(code)` terminates immediately and silently discards whatever is
+ * still buffered. Against a pipe (the normal case: `| jq`, `| node -e`, CI
+ * capture) the buffer is 8 KiB, so `status --json` on a run with more than ~40
+ * tasks produced exactly 8192 bytes and `JSON.parse` failed with "Unterminated
+ * string at position 8192". Redirecting to a file masked it, because a file
+ * write is synchronous and never queues.
+ *
+ * `process.exitCode` plus a natural return lets Node flush before exiting.
+ */
+function exitWhenFlushed(code) {
+  process.exitCode = code;
+  // A piped stdout keeps the event loop alive until the last chunk is written;
+  // an interactive terminal may not, so nudge it without truncating anything.
+  if (process.stdout.writableLength === 0) return;
+  process.stdout.once('drain', () => {});
+}
+
 main()
-  .then((code) => process.exit(code))
+  .then((code) => exitWhenFlushed(code))
   .catch((err) => {
     process.stderr.write(`${err && err.stack ? err.stack : err}\n`);
-    process.exit(1);
+    exitWhenFlushed(1);
   });

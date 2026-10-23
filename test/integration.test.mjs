@@ -607,6 +607,27 @@ test('CLI: cancel from a second terminal stops a running batch', async () => {
   }
 });
 
+test('CLI: status --json survives a pipe larger than the 8 KiB pipe buffer', async () => {
+  const s = sandbox('cli-pipe');
+  try {
+    // 60 tasks pushes the JSON summary past 8 KiB, which is where a premature
+    // process.exit() used to truncate stdout to exactly 8192 bytes.
+    await seedMany(s.input, 60, 200);
+    await cli(['run', '--in', s.input, '--out', s.output, '--preset', 'thumb-128', '--quiet']);
+
+    const out = await cli(['status', '--out', s.output, '--json']);
+    assert.ok(out.stdout.length > 8192, `expected >8 KiB of JSON, got ${out.stdout.length}`);
+    const parsed = JSON.parse(out.stdout);
+    assert.equal(parsed.counts.total, 60);
+    assert.equal(parsed.tasks.length, 60);
+    // The last task must be present: a truncated tail is what JSON.parse
+    // reports as "Unterminated string at position 8192".
+    assert.ok(parsed.tasks[59].rel, 'the final task must survive the pipe');
+  } finally {
+    s.cleanup();
+  }
+});
+
 function cli(args) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [CLI, ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
