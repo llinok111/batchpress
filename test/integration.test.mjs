@@ -363,7 +363,23 @@ test('crash recovery: kill -9 leaves a resumable run that adopts published files
       [CLI, 'run', '--in', s.input, '--out', s.output, '--preset', 'webp-q80', '--concurrency', '1', '--quiet'],
       { stdio: ['ignore', 'ignore', 'ignore'] }
     );
-    await new Promise((resolve) => setTimeout(resolve, 900));
+
+    // Wait for evidence of progress instead of guessing a duration: a fixed
+    // sleep is machine-dependent and failed on slower CI runners, where the
+    // first image had not finished before the kill.
+    const runsDir = path.join(s.output, '.batchpress', 'runs');
+    const deadline = Date.now() + 30000;
+    let observed = 0;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 25));
+      if (!fs.existsSync(runsDir)) continue;
+      const ids = fs.readdirSync(runsDir);
+      if (!ids.length) continue;
+      const journal = path.join(runsDir, ids[0], 'journal.ndjson');
+      if (!fs.existsSync(journal)) continue;
+      observed = Journal.read(journal).events.filter((e) => e.t === 'task.ok').length;
+      if (observed >= 2) break; // enough progress to prove resumability
+    }
     child.kill('SIGKILL'); // no cleanup, no graceful shutdown, exactly like a power cut
     await new Promise((resolve) => child.on('exit', resolve));
 
@@ -598,6 +614,9 @@ function cli(args) {
     let stderr = '';
     child.stdout.on('data', (d) => (stdout += d));
     child.stderr.on('data', (d) => (stderr += d));
-    child.on('exit', (code) => resolve({ code, stdout, stderr }));
+    // `exit` can fire before the pipes drain, which truncated stdout at the
+    // 8 KiB pipe buffer and made JSON.parse fail at exactly position 8192 on
+    // macOS. `close` fires only after every stdio stream has ended.
+    child.on('close', (code) => resolve({ code, stdout, stderr }));
   });
 }
